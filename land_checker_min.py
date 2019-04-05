@@ -504,10 +504,10 @@ for land in lands:
         if test_lead():
             test_fbpixel_thankyou()
 #            test_lead_check()
-
+    
+    del globals()['lang']
     log("")
     driver.quit()
-    del globals()['lang']
 
 
 # .//tr[td[contains(.,'11111')]]/td[9]/a[contains(@class,'hold')]
