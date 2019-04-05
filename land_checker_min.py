@@ -447,9 +447,11 @@ def test_lead_check():
 ###################################################################
 ####################### ЗАПУСК ТЕСТИРОВАНИЯ #######################
 ###################################################################
-
-with open("landings.txt", "r", encoding="utf-8") as f:
-    lands = [row.strip() for row in f]
+try:
+    with open("landings.txt", "r", encoding="utf-8") as f:
+        lands = [row.strip() for row in f]
+except OSError:
+    print("landings.txt не найден")
 
 try:
     with open(mini_log, "r", encoding="utf-8") as f:
