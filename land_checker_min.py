@@ -25,7 +25,7 @@ driver_path = "C:/Users/ed/testing/chromedriver/chromedriver.exe"
 mini_log = "mini.log"
 full_log = "full.log"
 lang_log = "lang.log"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/ed/testing/check_landings/g.json"
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/ed/testing/check_landings/g.json"
 ####################################################################
 
 
@@ -70,6 +70,15 @@ def land_open():
     driver.get(link)
     time.sleep(1)
 
+def log_add():
+    try:
+        with open(mini_log, "r", encoding="utf-8") as f:
+            txt = f.read()
+        with open(full_log, "a", encoding="utf-8") as f:
+            f.write(txt)
+        os.remove(mini_log)
+    except OSError:
+        pass
 
 ############## перевод библиотекой ###############
 def lang_detect(text):
@@ -453,14 +462,7 @@ try:
 except OSError:
     print("landings.txt не найден")
 
-try:
-    with open(mini_log, "r", encoding="utf-8") as f:
-        txt = f.read()
-    with open(full_log, "a", encoding="utf-8") as f:
-        f.write(txt)
-    os.remove(mini_log)
-except OSError:
-    pass
+log_add()
 
 for land in lands:
 
