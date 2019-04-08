@@ -4,7 +4,7 @@
 #
 # pip install pickle
 
-import sys, os, time, random, requests, logging, re
+import sys, os, time, random, requests, logging, re, string
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -51,21 +51,10 @@ def compare(page_lang, elem_lang, elem):
         log("язык " + elem + " совпадает с языком страницы " + elem_lang)
 
 def replacer(s):
-    global lang
+    global str, lang
     if lang != "ru" and lang != "bg":
-        s = s.replace("а", "a")
-        s = s.replace("е", "e")
-        s = s.replace("о", "o")
-        s = s.replace("с", "c")
-        s = s.replace("р", "p")
-        s = s.replace("х", "x")
-        s = s.replace("А", "A")
-        s = s.replace("Е", "E")
-        s = s.replace("О", "O")
-        s = s.replace("С", "C")
-        s = s.replace("Р", "P")
-        s = s.replace("Х", "X")
-    return s
+        trans_table = str.maketrans("аеосрхАЕОСРХ","aeocpxAEOCPX")
+    return s.translate(trans_table)
 
 def land_open():
     driver.get(link)
