@@ -468,7 +468,7 @@ for land in lands:
         test_callback()
         if test_lead():
             test_fbpixel_thankyou()
-            test_lead_check()
+#            test_lead_check()
 
     del globals()['lang']
     log("")
