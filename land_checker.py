@@ -9,6 +9,9 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import *
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 from langdetect import detect
 from googletrans import Translator
@@ -44,7 +47,9 @@ def replacer(s):
     global str, lang
     if lang != "ru" and lang != "bg":
         trans_table = str.maketrans("аеосрхАЕОСРХ","aeocpxAEOCPX")
-    return s.translate(trans_table)
+        return s.translate(trans_table)
+    else:
+        return s
 
 def land_open():
     driver.get(link)
@@ -69,24 +74,24 @@ def cleaner(s):
 def lang_detect(text):
     global lang
     if 'lang' not in globals():
-        lang = detect_methods[default_translate_method](cleaner(text))
+        lang = detect_methods[translate_method](cleaner(text))
         if lang != "ru" and lang != "bg":
-            lang = detect_methods[default_translate_method](cleaner(replacer(text)))
+            lang = detect_methods[translate_method](cleaner(replacer(text)))
         return lang
     else:
         if lang != "ru" and lang != "bg":
-            local_lang = detect_methods[default_translate_method](cleaner(replacer(text)))
+            local_lang = detect_methods[translate_method](cleaner(replacer(text)))
         else:
-            local_lang = detect_methods[default_translate_method](cleaner(text))
+            local_lang = detect_methods[translate_method](cleaner(text))
         return local_lang
 
 def lang_translate(text):
     global lang
     if lang != "ru":
         if lang != "bg":
-            translated = translate_methods[default_translate_method](cleaner(replacer(text)))
+            translated = translate_methods[translate_method](cleaner(replacer(text)))
         else:
-            translated = translate_methods[default_translate_method](cleaner(text))
+            translated = translate_methods[translate_method](cleaner(text))
     else:
         translated = text
     return translated
@@ -146,11 +151,22 @@ def test_elements_lang():
         st = cleaner(s)
         if len(st) > 20:
             lang_s = lang_detect(st[:1000])
-            print('.',sep='', end='', flush=True)
+            print('.',sep='', end='', flush=True) # loadingbar
             if (lang != lang_s) and (lang_s != "en"):
-                with open(lang_log, "a", encoding="utf-8") as kek:
-                    kek.write(lang_s + " is not " + lang + " " + s + "\n")
-                lang_error += 1
+                global translate_method
+                if translate_method == "lib":
+                    tmp = translate_method
+#                    translate_method = "cloud" # ! ! !
+                    lang_s = lang_detect(st[:500])
+                    if (lang != lang_s) and (lang_s != "en"):
+                        with open(lang_log, "a", encoding="utf-8") as f:
+                            f.write(lang_s + " is not " + lang + " " + s + "\n")
+                        lang_error += 1
+                    translate_method = tmp
+                else:
+                    with open(lang_log, "a", encoding="utf-8") as f:
+                        f.write(lang_s + " is not " + lang + " " + s + "\n")
+                    lang_error += 1
     print("")
     if lang_error > 0:
         logBad("возможное несовпадение языка " + str(lang_error) + " элементов")
@@ -291,7 +307,8 @@ def test_submit():
         log("во всех формах есть кнопка submit")
         return True
     else:
-        logBad("в форме(ах) пропущена кнопка submit")
+        x = form_num - submit_num
+        logBad("для " + str(x) + " кнопок в форме(ах) пропущен submit")
         return False
 
 # проверка required для поля
@@ -318,8 +335,9 @@ def test_fbpixel_main():
 def test_callback():
     form_num = len(driver.find_elements_by_tag_name("form"))
     input_num = len(driver.find_elements_by_tag_name("input"))
+    if form_num == 0: form_num = 1
     if (input_num/form_num) < 3:
-        if 'img/i-phone.png' in driver.page_source:
+        if 'img/i-phone.png' in driver.page_source or 'img/phone.png' in driver.page_source:
             log("коллбэк на месте")
             return True
         else:
@@ -403,9 +421,9 @@ def test_lead_check():
     for cookie in cookies:
         driver.add_cookie(cookie)
     driver.get("https://leadrock.com/administrator/lead")
-    time.sleep(3)
     try:
-        driver.find_element_by_xpath("//td[contains(.,'" + str(lead) + "')]")
+        WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead) + "')]")))
         log("лид дошел")
         return True
 #        try:
@@ -414,7 +432,7 @@ def test_lead_check():
 #        except NoSuchElementException:
 #            #driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[9]/a[contains(@class,'hold')]")
 #            log("лид уже в trash")
-    except NoSuchElementException:
+    except:
         logBad("лид не дошел")
         return False
 
