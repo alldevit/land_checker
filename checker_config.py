@@ -8,4 +8,4 @@ full_log = "log_full.log"
 lang_log = "log_lang.log"
 post_log = "log_post.log"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/ed/testing/check_landings/g.json"
-default_translate_method = "lib" # {lib, cloud, api}
+translate_method = "lib" # {lib, cloud, api}
