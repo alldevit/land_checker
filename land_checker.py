@@ -29,6 +29,7 @@ from checker_config import *
 
 # получаем список лендов
 def get_lands():
+    global lands
     try:
         with open("landings.txt", "r", encoding="utf-8") as f:
             lands = [row.strip() for row in f]
