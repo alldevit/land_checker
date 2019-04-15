@@ -35,7 +35,11 @@ def get_lands():
             rows = [row for row in f]
             lands = []
             for row in rows:
-                tmp_array = row.split(' ')
+                if " " in row:
+                    tmp_array = row.split(' ')
+                else:
+                    tmp_array = [row]
+                    
                 lands.append(tmp_array)
 
     except OSError:
@@ -181,7 +185,7 @@ def test_elements_lang():
                 global translate_method
                 if translate_method == "lib":
                     tmp = translate_method
-#                    translate_method = "cloud" # ! ! !
+                    translate_method = "cloud" # ! ! !
                     lang_s = lang_detect(st[:500])
                     if (lang != lang_s) and (lang_s != "en"):
                         with open(lang_log, "a", encoding="utf-8") as f:
@@ -575,7 +579,7 @@ def test_lead_check():
             except:
                 logBad("проверить статус лида c телефоном 1" + str(lead))
     except:
-        logBad("лид не дошел")
+        logBad("проверить статус лида c телефоном 1" + str(lead))
         return False
 
 
@@ -589,8 +593,12 @@ log_add()
 for row in lands:
 
     land = row[0]
-    if len(land) > 1 and "URL" in row[1]:
-        track_url = row[1]
+    print(land)
+    if len(row) > 1:
+        if "URL" in row[1]:
+            track_url = row[1]
+        else:
+            track_url = default_track_url
     else:
         track_url = default_track_url
 
@@ -632,7 +640,7 @@ for row in lands:
             test_fbpixel("thankyou")
             test_thankyou_lang()
             test_shipping_post()
-#            test_lead_check()
+            test_lead_check()
 
     del globals()['lang']
     log("")
