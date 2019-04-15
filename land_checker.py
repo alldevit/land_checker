@@ -1,7 +1,7 @@
 # Установка базовых модулей:
 # python -m pip install --upgrade pip
 # pip install selenium langdetect googletrans google-cloud-translate requests 
-# pip install pickle
+# 
 
 import sys, os, time, random, requests, logging, re, string
 from datetime import datetime
@@ -13,10 +13,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+from urllib.parse import unquote
+
 from langdetect import detect
 from googletrans import Translator
 from google.cloud import translate
 import pickle
+
 from checker_config import *
 
 
@@ -34,8 +37,9 @@ def log(text):
     with open(mini_log, "a", encoding="utf-8") as f:
         f.write("  " + str(text) + "\n")
 
+# сравниваем первый и второй аргумент, если второй не "en"
 def compare(page_lang, elem_lang, elem):
-    if elem_lang!="en":
+    if elem_lang != "en":
         if page_lang == elem_lang:
             log("язык " + elem + " совпадает с языком страницы " + elem_lang)
         else:
@@ -43,6 +47,7 @@ def compare(page_lang, elem_lang, elem):
     else:
         log("язык " + elem + " совпадает с языком страницы " + elem_lang)
 
+# заменяем кириллицу на латиницу, если язык ленда не кириллический
 def replacer(s):
     global str, lang
     if lang != "ru" and lang != "bg":
@@ -51,10 +56,12 @@ def replacer(s):
     else:
         return s
 
+# открываем ленд и ждем секунду
 def land_open():
     driver.get(link)
     time.sleep(1)
 
+# переносим содержимое последнего лога в полный лог и удаляем файл
 def log_add():
     try:
         with open(mini_log, "r", encoding="utf-8") as f:
@@ -65,6 +72,7 @@ def log_add():
     except OSError:
         pass
 
+# удаляем повторяющиеся пробелы и все цифры 
 def cleaner(s):
     return re.sub(r'\s+', ' ', re.sub(r"\d+", "", s))
 
@@ -136,11 +144,13 @@ detect_methods = {'lib':detect_lib, 'cloud':detect_cloud, 'api':detect_api}
 ########################################### ТЕСТЫ ###########################################
 #############################################################################################
 # определение языка ленда
+# детектим язык текста на странице
 def test_global_lang():
     lang = lang_detect(driver.find_element_by_tag_name("body").text)
     log(lang + " - язык ленда")
 
 # определение языка каждого элемента
+# вытягиваем текст, детектим язык всех строк по отдельности и сравниваем с языком ленда
 def test_elements_lang():
     source_text = driver.find_element_by_tag_name("body").text
     with open(lang_log, "a", encoding="utf-8") as f:
@@ -172,7 +182,8 @@ def test_elements_lang():
         logBad("возможное несовпадение языка " + str(lang_error) + " элементов")
     
 # проверка доступности ленда
-def test_available():
+# ищем "500" или "No input file specified"
+def test_land_exist():
     response = str(requests.head(link))
     if "500" in response:
         logBad("ленд недоступен - 500")
@@ -184,6 +195,7 @@ def test_available():
         return True
 
 # проверка наличия title и его языка
+# ищем <title> и детектим язык содержимого
 def test_title():
     try:
         title = driver.find_element_by_tag_name("title")
@@ -196,6 +208,7 @@ def test_title():
         return False
 
 # проверка языка description и keywords
+# ищем элементы, вытягиваем текст и детектим язык
 def test_meta_lang(name):
     try:
         elem = driver.find_element_by_xpath("//meta[@name='" + name + "']")
@@ -206,6 +219,7 @@ def test_meta_lang(name):
         pass
 
 # проверка наличия юрлица
+# ищем "GERARDE"
 def test_contacts():
     if "GERARDE" in replacer(driver.page_source):
         log("юрлицо на месте")
@@ -215,6 +229,7 @@ def test_contacts():
         return False
 
 # проверка наличия линка на политику
+# ищем ссылку "policy"
 def test_policy_link():
     try:
         driver.find_element_by_xpath("//a[contains(@href,'policy')]")
@@ -225,6 +240,7 @@ def test_policy_link():
         return False
 
 # проверка открытия политики в новой вкладке
+# ищем ссылку "policy" с атрибутом _blank
 def test_policy_blank():
     try:
         driver.find_element_by_xpath("//a[contains(@href,'policy') and @target='_blank']")
@@ -235,7 +251,8 @@ def test_policy_blank():
         return False
 
 # проверка доступности политики
-def test_policy_available():
+# переходим на политику и ищем "No input file specified"
+def test_policy_exist():
     driver.get(driver.find_element_by_xpath("//a[contains(@href,'policy')]").get_attribute("href"))
     try:
         driver.find_element_by_xpath('//*[contains(text(), "No input file specified")]')
@@ -244,29 +261,72 @@ def test_policy_available():
         log("файл policy на месте")
 
 # проверка языка политики
+# детектим язык текста на странице
 def test_policy_lang():
     lang_policy = lang_detect(driver.find_element_by_tag_name("body").text)
     compare(lang, lang_policy, "policy")
 
-# проверка существования спасибо
-def test_thankyou():
-    driver.get(land + "/thankyou.php")
-    try:
-        driver.find_element_by_xpath('//*[contains(text(), "No input file specified")]')
-        driver.get(land + "/confirm.html")
-        try:
-            driver.find_element_by_xpath('//*[contains(text(), "No input file specified")]')
-            logBad("страница thankyou недоступна")
-        except NoSuchElementException:
-            log("страница thankyou доступна")
-            lang_thankyou = lang_detect(driver.find_element_by_tag_name("body").text)
-            compare(lang, lang_thankyou, "thankyou")
-    except NoSuchElementException:
-        log("страница thankyou доступна")
-        lang_thankyou = lang_detect(driver.find_element_by_tag_name("body").text)
-        compare(lang, lang_thankyou, "thankyou")
+# проверка соответствия кода телефона стране
+# ищем упоминания кода телефона, сравниваем с количеством форм на странице
+def test_phone_code():
+    phone_codes = {'mk':('389'),
+    'sq':('389'),
+    'cs':('420'),
+    'zh':('852', '886'),
+    'et':('372'),
+    'ar':('966', '965', '973', '971', '968', '221', '212'),
+    'uk':('380'),
+    'sw':('255', '254', '256'),
+    'sl':('386'),
+    'de':('43', '49', '32', '41'),
+    'fl':('63'),
+    'pl':('48'),
+    'es':('591', '593', '51', '54', '34', '52', '57'),
+    'id':('62'),
+    'th':('66'),
+    'ru':('7'),
+    'hi':('91'),
+    'it':('39', '41'),
+    'sk':('421'),
+    'hu':('36'),
+    'nl':('32', '31'),
+    'ms':('60'),
+    'fi':('358'),
+    'sv':('358'),
+    'vi':('84'),
+    'bs':('387'),
+    'sr':('387', '381'),
+    'hr':('387', '385'),
+    'fr':('32', '41', '33', '221'),
+    'bg':('359'),
+    'ro':('40'),
+    'si':('94'),
+    'ta':('94'),
+    'lv':('371'),
+    'lt':('370')}
+    
+    form_num = len(driver.find_elements_by_tag_name("form"))
+    source = driver.page_source
+    matches = 0
+    for code in phone_codes[lang]:
+        matches += len(re.findall(r'\+[\s]?' + code, source))
+
+    if matches == form_num:
+        log("во всех формах есть телефон с подходящим кодом")
+    elif matches < form_num:
+        logBad("не во всех формах есть телефон с подходящим кодом")
+        logBad(matches)
+    else:
+        logBad("баг поиска телефона в ленде")
+
+# проверка языка конфирма
+# детектим язык текста на странице
+def test_thankyou_lang():
+    lang_thankyou = lang_detect(driver.find_element_by_tag_name("body").text)
+    compare(lang, lang_thankyou, "thankyou")
 
 # проверка упоминания почты в тексте
+# переводим текст на русский и ищем в нем "почт"
 def test_shipping_post():
     source_text = driver.find_element_by_tag_name("body").text.lower()
     if lang == "ru":
@@ -280,6 +340,7 @@ def test_shipping_post():
                 f.write(source_text_ru)
 
 # проверка форм на POST
+# считаем все формы, формы с методом POST и сравниваем количество
 def test_post_forms():
     post_num = len(driver.find_elements_by_xpath("//form[@method='POST' or @method='post']"))
     form_num = len(driver.find_elements_by_tag_name("form"))
@@ -291,6 +352,7 @@ def test_post_forms():
         return False
 
 # проверка наличия GET форм
+# ищем формы с методом GET
 def test_get_forms():
     try:
         driver.find_element_by_xpath("//form[@method='GET' or @method='get']")
@@ -300,6 +362,7 @@ def test_get_forms():
         return True
 
 # проверка наличия submit
+# считаем все формы, кнопки submit и сравниваем количество
 def test_submit():
     form_num = len(driver.find_elements_by_tag_name("form"))
     submit_num = len(driver.find_elements_by_xpath("//*[@type='submit']"))
@@ -311,27 +374,54 @@ def test_submit():
         logBad("для " + str(x) + " кнопок в форме(ах) пропущен submit")
         return False
 
-# проверка required для поля
-def test_required(elem):
-    elem_num = len(driver.find_elements_by_xpath("//input[@name='" + elem + "']"))
-    elem_req_num = len(driver.find_elements_by_xpath("//input[@name='" + elem + "' and @required]"))
-    if elem_num == elem_req_num:
-        log("для всех " + elem + " установлен required")
-        return True
-    else:
-        logBad("для " + elem + " не установлен required")
-        return False
+# проверка наличия name и phone
+# считаем все формы, ищем поля с name - name и phone, сравниваем количество
+def test_input_exist():
+    err = 0
+    inputs = ['name', 'phone']
+    form_num = len(driver.find_elements_by_tag_name("form"))
+    for elem in inputs:
+        elem_num = len(driver.find_elements_by_xpath("//input[@name='" + elem + "']"))
+        if form_num - elem_num > 0:
+            logBad("пропущено поле " + elem)
+            err = 1
+    if err == 0:
+        log("все необходимые поля на месте")
 
-# проверка наличия fbpixel
-def test_fbpixel_main():
-    if "fbq('init', '123123123123')" in driver.page_source:
-        log("fbpixel работает")
-        return True
-    else:
-        logBad("fbpixel не работает")
-        return False
+# проверка required для полей
+# считаем поля, считаем такие же поля с required, сравниваем количество
+def test_required_input():
+    global e
+    e = 0
+    s = ""
+    field_names = ['name', 'phone', 'other[address]', 'other[city]', 'other[zipcode]', 'other[quantity]']
+    for elem in field_names:
+        elem_num = len(driver.find_elements_by_xpath("//input[@name='" + elem + "']"))
+        if elem_num > 0:
+            elem_req_num = len(driver.find_elements_by_xpath("//input[@name='" + elem + "' and @required]"))
+            if elem_num > elem_req_num:
+                s += " " + elem
+                e = e + elem_num - elem_req_num
+
+    if len(s) > 0:
+        logBad("пропущены required для полей" + s)
+
+# проверка не-required полей
+# считаем все поля, все поля с required, поля notes и вычитаем из первых вторые, третие, и поля из предыдущего теста
+def test_nonrequired_input():
+    input_num = len(driver.find_elements_by_xpath("(//input[@type='text'])"))
+    input_req_num = len(driver.find_elements_by_xpath("(//input[@type='text' and @required])"))
+    try:
+        notes_num = len(driver.find_elements_by_xpath("//input[@name='other[notes]']"))
+    except:
+        notes_num = 0
+    global e
+    i = input_num - input_req_num - notes_num - e
+    if i > 0:
+        logBad(str(i) + " полей без required")
 
 # проверка наличия коллбэка
+# считаем количество полей в формах, ищем картинку коллбэка
 def test_callback():
     form_num = len(driver.find_elements_by_tag_name("form"))
     input_num = len(driver.find_elements_by_tag_name("input"))
@@ -347,61 +437,93 @@ def test_callback():
         log("коллбэк не требуется")
         return True
 
-# отправка лида
-def test_lead():
-
-    req_num = len(driver.find_elements_by_xpath("//input[@required]"))
-    for i in range(1, req_num + 1):
-        try:
-            driver.find_element_by_xpath("(//input[@required])[" + str(i) + "]").send_keys("1")
-        except:
-            pass
-
-    phone_num = len(driver.find_elements_by_xpath("//input[@name='phone' and @required]"))
-    for i in range(1, phone_num + 1):
-        try:
-            driver.find_element_by_xpath("(//input[@name='phone' and @required])[" + str(i) + "]").send_keys(lead)
-        except:
-            pass
-
-    name_num = len(driver.find_elements_by_xpath("//input[@name='name' and @required]"))
-    for i in range(1, name_num + 1):
-        try:
-            driver.find_element_by_xpath("(//input[@name='name' and @required])[" + str(i) + "]").send_keys("test")
-        except:
-            pass
-    
-    submit_num = len(driver.find_elements_by_xpath("//*[@type='submit']"))
-    for i in range(1, submit_num + 1):
-        try:
-            driver.find_element_by_xpath("(//*[@type='submit'])[" + str(i) + "]").click()
-        except:
-            pass
-
-    time.sleep(1)
+# проверка валидатора
+# ищем input с красной обводкой валидатора
+def test_validator():
     try:
-        if (("thankyou" in driver.current_url) or ("confirm" in driver.current_url)):
-            log("лид отправлен")
-            return True
-        else:
-            logBad("не удалось отправить лид")
-            return False
-    except UnexpectedAlertPresentException:
-        logBad("не удалось отправить лид, UnexpectedAlertPresentException")
+        driver.find_element_by_xpath("//input[contains(@style,'outline: rgba(244, 67, 54, 0.85)')]")
+        log("валидатор работает")
+    except NoSuchElementException:
+        logBad("валидатор не работает")
+
+# отправка лида
+# заполняем все обязательные поля, жмем submit, чекаем валидатор, дописываем телефон, снова жмем submit
+def test_lead():
+    submit_num = len(driver.find_elements_by_xpath("//*[@type='submit']"))
+    req_num = len(driver.find_elements_by_xpath("//input[@required]"))
+    name_num = len(driver.find_elements_by_xpath("//input[@name='name']"))
+    phone_num = len(driver.find_elements_by_xpath("//input[@name='phone']"))
+
+    def send():
+        for i in range(1, submit_num + 1):
+            try:
+                driver.find_element_by_xpath("(//*[@type='submit'])[" + str(i) + "]").click()
+            except:
+                pass
+
+    def check(output):
+        time.sleep(1)
+        try:
+            if (("thankyou" in driver.current_url) or ("confirm" in driver.current_url)):
+                if output == True: log("лид отправлен")
+                return True
+            else:
+                if output == True: logBad("не удалось отправить лид")
+                return False
+        except UnexpectedAlertPresentException:
+            if output == True: logBad("не удалось отправить лид, UnexpectedAlertPresentException")
+            return "error"
+
+    def input_1():
+        for i in range(1, req_num + 1): # в xpath индекс начинается с 1, а не с 0
+            try:
+                driver.find_element_by_xpath("(//input[@required])[" + str(i) + "]").send_keys("1")
+            except:
+                pass
+
+    def input_name():
+        for i in range(1, name_num + 1):
+            try:
+                driver.find_element_by_xpath("(//input[@name='name'])[" + str(i) + "]").send_keys("test")
+            except:
+                pass
+
+    def input_phone():
+        for i in range(1, phone_num + 1):
+            try:
+                driver.find_element_by_xpath("(//input[@name='phone'])[" + str(i) + "]").send_keys(lead)
+            except:
+                pass
+    
+    input_1()
+    input_name()
+    send()
+    test_validator()
+    result = check(False)
+    if result == True:
+        return check(True)
+    elif result == False:
+        input_phone()
+        send()
+        return check(True)
+    else:
+        logBad("ДОПИЛИТЬ ПРОВЕРКУ НАШЕГО ВАЛИДАТОРА при подключенном стороннем валидаторе")
         return False
 
-    time.sleep(1)
 
-# проверка работы fbpixel на thankyou
-def test_fbpixel_thankyou():
+# проверка работы fbpixel
+# ищем код событий пикселя, ищем код пикселя из конфига
+def test_fbpixel(page):
     if "fbq('track', 'PageView'" in driver.page_source:
-        log("PageView на thankyou работает")
+        log("PageView на " + page + " работает")
     else:
-        logBad("PageView на thankyou не работает")
-    if "fbq('track', 'Lead'" in driver.page_source:
-        log("Lead на thankyou работает")
-    else:
-        logBad("Lead на thankyou не работает")
+        logBad("PageView на " + page + " не работает")
+    
+    if page == "thankyou":
+        if "fbq('track', 'Lead'" in driver.page_source:
+            log("Lead на " + page + " работает")
+        else:
+            logBad("Lead на " + page + " не работает")
     
     a = driver.page_source.split("\n")
     for s in a:
@@ -410,12 +532,14 @@ def test_fbpixel_thankyou():
 
     if "fbq('init', '" in driver.page_source:
         if "fbq('init', '" + fbpixel in driver.page_source:
-            log("на thankyou динамический fbpixel")
+            log("на " + page + " динамический fbpixel")
         else:
-            logBad("на thankyou вшитый fbpixel - " + str(real_pixel))
+            logBad("на " + page + " вшитый fbpixel - " + str(real_pixel))
 
 # проверка наличия лида в лидроке
+# открываем лидрок, грузим куки, ищем lead
 def test_lead_check():
+    time.sleep(1)
     driver.get("https://leadrock.com/")
     cookies = pickle.load(open("cookies.pkl","rb"))
     for cookie in cookies:
@@ -462,7 +586,7 @@ for land in lands:
     
 
     land_open()
-    if test_available():
+    if test_land_exist():
         test_global_lang()
         test_elements_lang()
         test_shipping_post()
@@ -472,20 +596,22 @@ for land in lands:
         test_contacts()
         if test_policy_link():
             test_policy_blank()
-            test_policy_available()
+            test_policy_exist()
             test_policy_lang()
-        if test_thankyou():
-            test_shipping_post()
         land_open()
+        test_phone_code()
         test_post_forms()
         test_get_forms()
         test_submit()
-        test_required("name")
-        test_required("phone")
-        test_fbpixel_main()
+        test_input_exist()
+        test_required_input()
+        test_nonrequired_input()
+        test_fbpixel("ленде")
         test_callback()
         if test_lead():
-            test_fbpixel_thankyou()
+            test_fbpixel("thankyou")
+            test_thankyou_lang()
+            test_shipping_post()
 #            test_lead_check()
 
     del globals()['lang']
