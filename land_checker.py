@@ -32,7 +32,12 @@ def get_lands():
     global lands
     try:
         with open("landings.txt", "r", encoding="utf-8") as f:
-            lands = [row.strip() for row in f]
+            rows = [row for row in f]
+            lands = []
+            for row in rows:
+                tmp_array = row.split(' ')
+                lands.append(tmp_array)
+
     except OSError:
         print("landings.txt не найден")
 
@@ -324,8 +329,7 @@ def test_phone_code():
     if matches == form_num:
         log("во всех формах есть телефон с подходящим кодом")
     elif matches < form_num:
-        logBad("не во всех формах есть телефон с подходящим кодом")
-        logBad(matches)
+        logBad("не во всех формах есть телефон с подходящим кодом (" + str(matches) + " телефонов / " + str(form_num) + " форм)")
     else:
         logBad("баг поиска телефона в ленде")
 
@@ -559,13 +563,17 @@ def test_lead_check():
         WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead) + "')]")))
         log("лид дошел")
-        return True
-#        try:
-#            driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[9]/a[contains(@class,'trash')]").click()
-#            log("лид отправлен в trash")
-#        except NoSuchElementException:
-#            #driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[9]/a[contains(@class,'hold')]")
-#            log("лид уже в trash")
+        try:
+            driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
+            driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[10]/a[contains(@class,'trash')]").click()
+            log("лид отправлен в trash")
+        except NoSuchElementException:
+            #driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[9]/a[contains(@class,'hold')]")
+            try:
+                driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
+                log("лид уже в trash")
+            except:
+                logBad("проверить статус лида c телефоном 1" + str(lead))
     except:
         logBad("лид не дошел")
         return False
@@ -578,7 +586,13 @@ def test_lead_check():
 get_lands()
 log_add()
 
-for land in lands:
+for row in lands:
+
+    land = row[0]
+    if len(land) > 1 and "URL" in row[1]:
+        track_url = row[1]
+    else:
+        track_url = default_track_url
 
     link = land + "?track_url=" + track_url + "&fbpixel=" + fbpixel
     lead = random.randint(1000000000, 9999999999)
