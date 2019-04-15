@@ -1,6 +1,6 @@
 import os
 
-track_url = "URL-C53EA-0260C" # трек-урл с левого оффера, нужен в служебных целях
+default_track_url = "URL-C53EA-0260C" # трек-урл с левого оффера, нужен в служебных целях
 fbpixel = "123123123123"
 driver_path = "C:/Users/ed/testing/chromedriver/chromedriver.exe"
 mini_log = "log_latest.log"
