@@ -433,10 +433,13 @@ def test_required_input():
 def test_nonrequired_input():
     input_num = len(driver.find_elements_by_xpath("(//input[@type='text'])"))
     input_req_num = len(driver.find_elements_by_xpath("(//input[@type='text' and @required])"))
-    try:
-        notes_num = len(driver.find_elements_by_xpath("//input[@name='other[notes]']"))
-    except:
-        notes_num = 0
+    notes_elems = ['other[note]', 'other[notes]']
+    notes_num = 0
+    for elem in notes_elems:
+        try:
+            notes_num += len(driver.find_elements_by_xpath("//input[@name='" + elem + "']"))
+        except:
+            pass
     global e
     i = input_num - input_req_num - notes_num - e
     if i > 0:
