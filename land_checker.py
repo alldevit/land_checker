@@ -599,9 +599,9 @@ def test_lead_check():
                 driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
                 log("лид уже в trash")
             except:
-                logBad("проверить статус лида c телефоном 1" + str(lead))
+                logBad("не удалось отправить в trash лид c телефоном 1" + str(lead))
     except:
-        logBad("проверить статус лида c телефоном 1" + str(lead))
+        logBad("не удалось найти лид c телефоном 1" + str(lead))
         return False
 
 
