@@ -317,6 +317,7 @@ def test_phone_code():
     'sr':('387', '381'),
     'hr':('387', '385'),
     'fr':('32', '41', '33', '221'),
+    'pt':('55', '351'),
     'bg':('359'),
     'ro':('40'),
     'si':('94'),
@@ -324,18 +325,21 @@ def test_phone_code():
     'lv':('371'),
     'lt':('370')}
     
-    form_num = len(driver.find_elements_by_tag_name("form"))
-    source = driver.page_source
-    matches = 0
-    for code in phone_codes[lang]:
-        matches += len(re.findall(r'\+[\s]?' + code, source))
+    if lang != "en":
+        form_num = len(driver.find_elements_by_tag_name("form"))
+        source = driver.page_source
+        matches = 0
+        for code in phone_codes[lang]:
+            matches += len(re.findall(r'\+[\s]?' + code, source))
 
-    if matches == form_num:
-        log("во всех формах есть телефон с подходящим кодом")
-    elif matches < form_num:
-        logBad("не во всех формах есть телефон с подходящим кодом (" + str(matches) + " телефонов / " + str(form_num) + " форм)")
+        if matches == form_num:
+            log("во всех формах есть телефон с подходящим кодом")
+        elif matches < form_num:
+            logBad("не во всех формах есть телефон с подходящим кодом (" + str(matches) + " телефонов / " + str(form_num) + " форм)")
+        else:
+            logBad("баг поиска телефона в ленде")
     else:
-        logBad("баг поиска телефона в ленде")
+        logBad("необходимо проверить код телефона в подсказке")
 
 # проверка языка конфирма
 # детектим язык текста на странице
@@ -464,6 +468,17 @@ def test_validator():
     except NoSuchElementException:
         logBad("валидатор не работает")
 
+# проверка наличия колеса удачи
+def test_wheel():
+    try:
+        driver.find_element_by_xpath(".//div[contains(@class, 'wheel')]/span[contains(@class, 'cursor-text')]").click()
+        print("  обнаружено колесо, крутим")
+        time.sleep(10)
+        driver.find_element_by_xpath("//a[@class='pop-up-button'][contains(.,'Ok')]").click()
+        time.sleep(1)
+    except:
+        pass
+
 # отправка лида
 # заполняем все обязательные поля, жмем submit, чекаем валидатор, дописываем телефон, снова жмем submit
 def test_lead():
@@ -513,6 +528,8 @@ def test_lead():
             except:
                 pass
     
+    test_wheel()
+
     input_1()
     input_name()
     send()
@@ -570,6 +587,8 @@ def test_lead_check():
         try:
             driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
             driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[10]/a[contains(@class,'trash')]").click()
+            time.sleep(0.5)
+            driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
             log("лид отправлен в trash")
         except NoSuchElementException:
             #driver.find_element_by_xpath(".//tr[td[contains(.,'" + str(lead) + "')]]/td[9]/a[contains(@class,'hold')]")
@@ -593,7 +612,6 @@ log_add()
 for row in lands:
 
     land = row[0]
-    print(land)
     if len(row) > 1:
         if "URL" in row[1]:
             track_url = row[1]
