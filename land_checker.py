@@ -516,7 +516,8 @@ def test_wheel():
         print("  обнаружено колесо, крутим")
         time.sleep(10)
         f_xp("//a[@class='pop-up-button'][contains(.,'Ok')]").click()
-        time.sleep(1)
+        print("  жмем ОК")
+        time.sleep(2)
     except:
         pass
 
@@ -559,14 +560,14 @@ def test_lead():
     def input_name():
         for i in range(1, name_num + 1):
             try:
-                f_xp("(//input[@name='name'])[" + str(i) + "]").send_keys("test")
+                f_xp("(//input[@name='name'])[" + str(i) + "]").send_keys(u'\ue003' + "test")
             except:
                 pass
 
     def input_phone():
         for i in range(1, phone_num + 1):
             try:
-                f_xp("(//input[@name='phone'])[" + str(i) + "]").send_keys(str(lead)*2)
+                f_xp("(//input[@name='phone'])[" + str(i) + "]").send_keys(u'\ue003' + str(lead)*3)
             except:
                 pass
     
@@ -624,23 +625,23 @@ def test_lead_check():
     driver.get("https://leadrock.com/administrator/lead")
     try:
         WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead)*2 + "')]")))
+            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead)*3 + "')]")))
         log("лид дошел")
         try:
-            f_xp(".//tr[td[contains(.,'" + str(lead)*2 + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
-            f_xp(".//tr[td[contains(.,'" + str(lead)*2 + "')]]/td[10]/a[contains(@class,'trash')]").click()
+            f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
+            f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[10]/a[contains(@class,'trash')]").click()
             time.sleep(0.5)
-            f_xp(".//tr[td[contains(.,'" + str(lead)*2 + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
+            f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
             log("лид отправлен в trash")
         except NoSuchElementException:
-            #f_xp(".//tr[td[contains(.,'" + str(lead)*2 + "')]]/td[9]/a[contains(@class,'hold')]")
+            #f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[9]/a[contains(@class,'hold')]")
             try:
-                f_xp(".//tr[td[contains(.,'" + str(lead)*2 + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
+                f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
                 log("лид уже в trash")
             except:
-                logBad("не удалось отправить в trash лид c телефоном 1" + str(lead)*2)
+                logBad("не удалось отправить в trash лид c телефоном " + str(lead)*3)
     except:
-        logBad("не удалось найти лид c телефоном 1" + str(lead)*2)
+        logBad("не удалось найти лид c телефоном 1" + str(lead)*3)
         return False
 
 
