@@ -180,7 +180,7 @@ detect_methods = {'lib':detect_lib, 'cloud':detect_cloud, 'api':detect_api}
 # определение, ленд/преленд
 # считаем количество ссылок на странице
 def test_is_land():
-    if len(f_xps("//input[@name='name']")) > 0 or (len(f_tags("a")) < 50 and len(f_tags("form")) > 0):
+    if len(f_xps("//input[@name='name']")) > 0 or (len(f_tags("a")) < 50 and len(f_tags("form")) > 0) or len(f_tags("iframe")) > 0:
         log("ленд")
         return True
     else:
@@ -641,7 +641,7 @@ def test_lead_check():
             except:
                 logBad("не удалось отправить в trash лид c телефоном " + str(lead)*3)
     except:
-        logBad("не удалось найти лид c телефоном 1" + str(lead)*3)
+        logBad("не удалось найти лид c телефоном " + str(lead)*3)
         return False
 
 
@@ -707,7 +707,9 @@ for row in lands:
                 test_thankyou_lang()
                 test_shipping_post()
                 test_lead_check()
-        else: # запуск тестов для преленда
+
+# запуск тестов для преленда
+        else:
             test_global_lang()
             test_elements_lang()
             test_meta_lang("description")
