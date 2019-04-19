@@ -1,12 +1,9 @@
-# Установка базовых модулей:
-# python -m pip install --upgrade pip
-# pip install selenium langdetect googletrans google-cloud-translate requests 
-# 
-
 import sys, os, time, random, requests, logging, re, string
 from datetime import datetime
 from selenium import webdriver
 from collections import Counter
+from urllib.parse import unquote
+
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import *
@@ -14,15 +11,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-from urllib.parse import unquote
-
 from langdetect import detect
 from googletrans import Translator
 from google.cloud import translate
 import pickle
 
 from checker_config import *
-
 
 #############################################################################################
 ####################################### СИСТЕМНЫЕ f() #######################################
@@ -74,11 +68,11 @@ def log(text):
 def compare(page_lang, elem_lang, elem):
     if elem_lang != "en":
         if page_lang == elem_lang:
-            log("язык " + elem + " совпадает с языком страницы " + elem_lang)
+            log("язык " + elem + " (" + elem_lang +") совпадает с языком страницы " + "(" + lang + ")")
         else:
-            logBad("язык " + elem + " не совпадает с языком страницы " + elem_lang)
+            logBad("язык " + elem + " (" + elem_lang +") не совпадает с языком страницы " + "(" + lang + ")")
     else:
-        log("язык " + elem + " совпадает с языком страницы " + elem_lang)
+        log("язык " + elem + " (" + elem_lang +") совпадает с языком страницы " + "(" + lang + ")")
 
 # заменяем кириллицу на латиницу, если язык ленда не кириллический
 def replacer(s):
@@ -180,7 +174,9 @@ detect_methods = {'lib':detect_lib, 'cloud':detect_cloud, 'api':detect_api}
 # определение, ленд/преленд
 # считаем количество ссылок на странице
 def test_is_land():
-    if len(f_xps("//input[@name='name']")) > 0 or (len(f_tags("a")) < 50 and len(f_tags("form")) > 0) or len(f_tags("iframe")) > 0:
+    if len(f_xps("//input[@name='name']")) > 0 or\
+        (len(f_tags("a")) < 50 and (len(f_tags("form")) - len(f_xps("//form[contains(@class, 'search')]"))) > 0) or\
+        (len(f_tags("iframe")) - len(f_xps("//iframe[contains(@name, '_ym_native')]"))) > 0:
         log("ленд")
         return True
     else:
@@ -202,7 +198,7 @@ def test_pre_links():
     correct_links = 0
     for i in c:
         correct_links += i[1]
-        log(str(i[1]) + " " + str(i[0]))
+        log(str(i[1]) + ' "' + str(i[0]) + '"')
     if correct_links != links_num:
         logBad("не удалось определить " + str(links_num - correct_links) + " ссылок")
 
@@ -544,7 +540,6 @@ def test_lead():
                 return True
             else:
                 if output == True: logBad("не удалось отправить лид (конфирм не открылся)")
-                time.sleep(5)
                 return False
         except UnexpectedAlertPresentException:
             if output == True: logBad("не удалось отправить лид, UnexpectedAlertPresentException")
@@ -657,8 +652,9 @@ for row in lands:
     options = Options()
     options.add_argument('log-level=2')
     options.add_argument('--headless') # закомментировать для отключения headless-режима
+    options.add_argument('--incognito')
     driver = webdriver.Chrome(driver_path, options=options)
-    
+    driver.delete_all_cookies()
     log(datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S"))
 
     land = row[0]
@@ -680,10 +676,12 @@ for row in lands:
 
     land_open()
     if test_land_exist():
-        if test_is_land(): # запуск тестов для ленда
+        if test_is_land():
+            
+# запуск тестов для ленда
             test_global_lang()
             test_elements_lang()
-            test_shipping_post()
+#            test_shipping_post()
             test_title()
             test_meta_lang("description")
             test_meta_lang("keywords")
@@ -700,18 +698,19 @@ for row in lands:
             test_input_exist()
             test_required_input()
             test_nonrequired_input()
-            test_fbpixel("ленде")
             test_callback()
+            test_fbpixel("ленде")
             if test_lead():
                 test_fbpixel("thankyou")
                 test_thankyou_lang()
-                test_shipping_post()
+#                test_shipping_post()
                 test_lead_check()
 
 # запуск тестов для преленда
         else:
             test_global_lang()
             test_elements_lang()
+            test_title()
             test_meta_lang("description")
             test_meta_lang("keywords")
             test_pre_links()
