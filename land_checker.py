@@ -357,7 +357,8 @@ def test_phone_code():
     'si':('94'),
     'ta':('94'),
     'lv':('371'),
-    'lt':('370')}
+    'lt':('370'),
+    'el':('30')}
     
     if lang != "en":
         form_num = len(f_tags("form"))
