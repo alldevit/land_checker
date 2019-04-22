@@ -120,13 +120,13 @@ def lang_detect(text, method):
             local_lang = detect_methods[method](cleaner(text))
         return local_lang
 
-def lang_translate(text):
+def lang_translate(text, method):
     global lang
     if lang != "ru":
         if lang != "bg":
-            translated = translate_methods[translate_method](cleaner(replacer(text)))
+            translated = translate_methods[method](cleaner(replacer(text)))
         else:
-            translated = translate_methods[translate_method](cleaner(text))
+            translated = translate_methods[method](cleaner(text))
     else:
         translated = text
     return translated
@@ -390,7 +390,7 @@ def test_shipping_post():
         if "почт" in source_text:
             logBad("в тексте упоминается почта")
     else:
-        source_text_ru = lang_translate(source_text)
+        source_text_ru = lang_translate(source_text, "cloud")
         if "почт" in source_text_ru:
             logBad("в тексте упоминается почта")
             with open(post_log, "a", encoding="utf-8") as f:
@@ -560,10 +560,16 @@ def test_lead():
             except:
                 pass
 
-    def input_phone():
+    def input_phone_1():
         for i in range(1, phone_num + 1):
             try:
-                f_xp("(//input[@name='phone'])[" + str(i) + "]").send_keys(u'\ue003' + str(lead)*3)
+                f_xp("(//input[@name='phone'])[" + str(i) + "]").send_keys(u'\ue003' + str(lead))
+            except:
+                pass
+    def input_phone_2():
+        for i in range(1, phone_num + 1):
+            try:
+                f_xp("(//input[@name='phone'])[" + str(i) + "]").send_keys(str(lead))
             except:
                 pass
     
@@ -571,13 +577,14 @@ def test_lead():
 
     input_1()
     input_name()
+    input_phone_1()
     send()
     test_validator()
     result = check(False)
     if result == True:
         return check(True)
     elif result == False:
-        input_phone()
+        input_phone_2()
         send()
         return check(True)
     else:
@@ -621,23 +628,23 @@ def test_lead_check():
     driver.get("https://leadrock.com/administrator/lead")
     try:
         WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead)*3 + "')]")))
+            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead) + "')]")))
         log("лид дошел")
         try:
-            f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
-            f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[10]/a[contains(@class,'trash')]").click()
+            f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
+            f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[10]/a[contains(@class,'trash')]").click()
             time.sleep(0.5)
-            f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
+            f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
             log("лид отправлен в trash")
         except NoSuchElementException:
-            #f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[9]/a[contains(@class,'hold')]")
+            #f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[9]/a[contains(@class,'hold')]")
             try:
-                f_xp(".//tr[td[contains(.,'" + str(lead)*3 + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
+                f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
                 log("лид уже в trash")
             except:
-                logBad("не удалось отправить в trash лид c телефоном " + str(lead)*3)
+                logBad("не удалось отправить в trash лид c телефоном " + str(lead))
     except:
-        logBad("не удалось найти лид c телефоном " + str(lead)*3)
+        logBad("не удалось найти лид c телефоном " + str(lead))
         return False
 
 
@@ -704,7 +711,7 @@ for row in lands:
             if test_lead():
                 test_fbpixel("thankyou")
                 test_thankyou_lang()
-#                test_shipping_post()
+                test_shipping_post()
                 test_lead_check()
 
 # запуск тестов для преленда
