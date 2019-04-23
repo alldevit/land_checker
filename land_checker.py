@@ -628,7 +628,7 @@ def test_lead_check():
     driver.get("https://leadrock.com/administrator/lead")
     try:
         WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead) + "')]")))
+            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead) + "') and contains(.,'test')]")))
         log("лид дошел")
         try:
             f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
