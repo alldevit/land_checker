@@ -174,9 +174,9 @@ detect_methods = {'lib':detect_lib, 'cloud':detect_cloud, 'api':detect_api}
 # определение, ленд/преленд
 # считаем количество ссылок на странице
 def test_is_land():
-    if len(f_xps("//input[@name='name']")) > 0 or\
-        (len(f_tags("a")) < 50 and (len(f_tags("form")) - len(f_xps("//form[contains(@class, 'search')]"))) > 0) or\
-        (len(f_tags("iframe")) - len(f_xps("//iframe[contains(@name, '_ym_native')]"))) > 0:
+    if ((len(f_xps("//input[@name='name']")) > 0 or (len(f_tags("form")) - len(f_xps("//form[contains(@class, 'search')]"))) > 0) or ((len(f_tags("iframe")) - len(f_xps("//iframe[contains(@name, '_ym_native')]"))) > 0)) and\
+            ("isPrelanding: true" not in driver.page_source) and\
+            (len(f_tags("a")) < 50):
         log("ленд")
         return True
     else:
@@ -201,6 +201,20 @@ def test_pre_links():
         log(str(i[1]) + ' "' + str(i[0]) + '"')
     if correct_links != links_num:
         logBad("не удалось определить " + str(links_num - correct_links) + " ссылок")
+
+# анализ якорей на ленде
+def test_anchors():
+    anchors_num = len(f_xps("//*[contains(@href, '#')]"))
+    if anchors_num > 0:
+        anchors = []
+        for i in range(1, anchors_num + 1):
+            anchor = f_xp("(//*[contains(@href, '#')])[" + str(i) + "]").get_attribute('href')
+            anchors.append(anchor)
+        c = list(Counter(anchors).items())
+        log(str(anchors_num) + " якорей на ленде:")
+        for i in c:
+            log("  " + str(i[1]) + ' "' + str(i[0]).split('#', 1)[1] + '"')
+
 
 
 # определение языка страницы
@@ -497,6 +511,14 @@ def test_callback():
         log("коллбэк не требуется")
         return True
 
+# проверка отсутствия поля e-mail
+# ищем поле, содержащее в name "email"
+def test_email():
+    num_email = len(f_xps("//input[contains(@name, 'email')]"))
+    if num_email > 0:
+        logBad("в форме присутствует поле email")
+
+
 # проверка валидатора
 # ищем input с красной обводкой валидатора
 def test_validator():
@@ -536,7 +558,9 @@ def test_lead():
     def check(output):
         time.sleep(1)
         try:
-            if (("thankyou" in driver.current_url) or ("confirm" in driver.current_url)):
+            if (("thankyou" in driver.current_url) or \
+                ("confirm" in driver.current_url) or \
+                ("order.php" in driver.current_url)):
                 if output == True: log("лид отправлен")
                 return True
             else:
@@ -633,7 +657,7 @@ def test_lead_check():
         try:
             f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-spinner')]")
             f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[10]/a[contains(@class,'trash')]").click()
-            time.sleep(0.5)
+            time.sleep(1)
             f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[4]/i[contains(@class,'fa-trash-o')]")
             log("лид отправлен в trash")
         except NoSuchElementException:
@@ -661,6 +685,7 @@ for row in lands:
     options.add_argument('log-level=2')
     options.add_argument('--headless') # закомментировать для отключения headless-режима
     options.add_argument('--incognito')
+#    options.add_argument('--disable-images')
     driver = webdriver.Chrome(driver_path, options=options)
     driver.delete_all_cookies()
     log(datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S"))
@@ -699,6 +724,8 @@ for row in lands:
                 test_policy_exist()
                 test_policy_lang()
             land_open()
+            test_callback()
+            test_anchors()
             test_phone_code()
             test_post_forms()
             test_get_forms()
@@ -706,7 +733,7 @@ for row in lands:
             test_input_exist()
             test_required_input()
             test_nonrequired_input()
-            test_callback()
+            test_email()
             test_fbpixel("ленде")
             if test_lead():
                 test_fbpixel("thankyou")
