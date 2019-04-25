@@ -6,7 +6,7 @@ from urllib.parse import unquote
 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import *
+from selenium.common.exceptions import NoSuchElementException, NoSuchAttributeException, UnexpectedAlertPresentException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -21,6 +21,7 @@ from checker_config import *
 #############################################################################################
 ####################################### СИСТЕМНЫЕ f() #######################################
 #############################################################################################
+error_num = 0
 
 # создание синонимов основных функций поиска элементов
 def f_xps(s):
@@ -53,6 +54,8 @@ def get_lands():
 
 # логирование -
 def logBad(text):
+    global error_num
+    error_num += 1
     text = '- ' + str(text) + '\n'
     print(text[:-1])
     with open(mini_log, "a", encoding="utf-8") as f:
@@ -68,11 +71,11 @@ def log(text):
 def compare(page_lang, elem_lang, elem):
     if elem_lang != "en":
         if page_lang == elem_lang:
-            log("язык " + elem + " (" + elem_lang +") совпадает с языком страницы " + "(" + lang + ")")
+            log("язык %s (%s) совпадает с языком страницы (%s)" % (elem, elem_lang, lang))
         else:
-            logBad("язык " + elem + " (" + elem_lang +") не совпадает с языком страницы " + "(" + lang + ")")
+            logBad("язык %s (%s) не совпадает с языком страницы (%s)" % (elem, elem_lang, lang))
     else:
-        log("язык " + elem + " (" + elem_lang +") совпадает с языком страницы " + "(" + lang + ")")
+        log("язык %s (%s) совпадает с языком страницы (%s)" % (elem, elem_lang, lang))
 
 # заменяем кириллицу на латиницу, если язык ленда не кириллический
 def replacer(s):
@@ -200,7 +203,7 @@ def test_pre_links():
         correct_links += i[1]
         log(str(i[1]) + ' "' + str(i[0]) + '"')
     if correct_links != links_num:
-        logBad("не удалось определить " + str(links_num - correct_links) + " ссылок")
+        logBad("не удалось определить %s ссылок" % str(links_num - correct_links))
 
 # анализ якорей на ленде
 def test_anchors():
@@ -213,7 +216,7 @@ def test_anchors():
         c = list(Counter(anchors).items())
         log(str(anchors_num) + " якорей на ленде:")
         for i in c:
-            log("  " + str(i[1]) + ' "' + str(i[0]).split('#', 1)[1] + '"')
+            log('  %s "%s"' % (i[1], str(i[0]).split('#', 1)[1]))
 
 
 
@@ -246,7 +249,7 @@ def test_elements_lang():
     if lang_error == 0:
         log("язык всех элементов соответствует языку страницы")
     else:
-        logBad("возможное несовпадение языка " + str(lang_error) + " элементов")
+        logBad("возможное несовпадение языка %s элементов" % lang_error)
     
 # проверка доступности ленда
 # ищем "500" или "No input file specified"
@@ -384,9 +387,9 @@ def test_phone_code():
         if matches == form_num:
             log("во всех формах есть телефон с подходящим кодом")
         elif matches < form_num:
-            logBad("не во всех формах есть телефон с подходящим кодом (" + str(matches) + " телефонов / " + str(form_num) + " форм)")
+            logBad("не во всех формах есть телефон с подходящим кодом (%s телефонов / %s форм)" % (matches, form_num))
         else:
-            logBad("необходимо проверить код телефона в подсказке (" + str(matches) + " телефонов / " + str(form_num) + " форм)")
+            logBad("необходимо проверить код телефона в подсказке (%s телефонов / %s форм)" % (matches, form_num))
     else:
         logBad("необходимо проверить код телефона в подсказке")
 
@@ -639,7 +642,7 @@ def test_fbpixel(page):
         if "fbq('init', '" + fbpixel in driver.page_source:
             log("на " + page + " динамический fbpixel")
         else:
-            logBad("на " + page + " вшитый fbpixel - " + str(real_pixel))
+            logBad("на %s вшитый fbpixel - %s" % (page, real_pixel))
 
 # проверка наличия лида в лидроке
 # открываем лидрок, грузим куки, ищем lead
@@ -651,7 +654,7 @@ def test_lead_check():
         driver.add_cookie(cookie)
     driver.get("https://leadrock.com/administrator/lead")
     try:
-        WebDriverWait(driver, 5).until(
+        WebDriverWait(driver, 6).until(
             EC.presence_of_element_located((By.XPATH, "//td[contains(.,'" + str(lead) + "') and contains(.,'test')]")))
         log("лид дошел")
         try:
@@ -671,6 +674,14 @@ def test_lead_check():
         logBad("не удалось найти лид c телефоном " + str(lead))
         return False
 
+def test_result():
+    global error_num
+    if error_num > 0:
+        log("--------------------------------------")
+        log("Выявлено %s возможных ошибок" % error_num)
+    else:
+        log("--------------------------------------")
+        log("Ошибок не выявлено")
 
 #############################################################################################
 ####################################### ЗАПУСК ТЕСТОВ #######################################
@@ -680,6 +691,8 @@ log_add()
 get_lands()
 
 for row in lands:
+
+    error_num = 0
 
     options = Options()
     options.add_argument('log-level=2')
@@ -749,8 +762,11 @@ for row in lands:
             test_meta_lang("description")
             test_meta_lang("keywords")
             test_pre_links()
-
-    del globals()['lang']
+    test_result()
+    try:
+        del globals()['lang']
+    except:
+        pass
     log("")
     driver.quit()
 
