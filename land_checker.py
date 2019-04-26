@@ -80,7 +80,7 @@ def compare(page_lang, elem_lang, elem):
 # заменяем кириллицу на латиницу, если язык ленда не кириллический
 def replacer(s):
     global str, lang
-    if lang != "ru" and lang != "bg":
+    if lang not in "ru, bg":
         trans_table = str.maketrans("аеосрхАЕОСРХ","aeocpxAEOCPX")
         return s.translate(trans_table)
     else:
@@ -113,11 +113,11 @@ def lang_detect(text, method):
     global lang
     if 'lang' not in globals():
         lang = detect_methods[method](cleaner(text))
-        if lang != "ru" and lang != "bg":
+        if lang not in "ru, bg":
             lang = detect_methods[method](cleaner(replacer(text)))
         return lang
     else:
-        if lang != "ru" and lang != "bg":
+        if lang not in "ru, bg":
             local_lang = detect_methods[method](cleaner(replacer(text)))
         else:
             local_lang = detect_methods[method](cleaner(text))
