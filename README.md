@@ -9,7 +9,7 @@ python -m pip install --upgrade pip
 ```bash
 pip install selenium langdetect googletrans google-cloud-translate requests
 ```
-**3**. Указываем пути до webdriver'а (по-умолчанию - `chromedriver.exe`) и `g.json` в файле `checker_config.py`
+**3**. Скачиваем [chromedriver](http://chromedriver.chromium.org/downloads "Chromedriver"), указываем пути до него и `g.json` в файле `checker_config.py`
 
 **4**. Указываем реквизиты доступа к LeadRock.com в `cookie_saver.py`
 
