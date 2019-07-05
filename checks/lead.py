@@ -64,7 +64,7 @@ def lead(self):
     def input_name():
         for i in range(1, self.name_num + 1):
             try:
-                self.f_xp("(//input[@name='name'])[%s]" % i).send_keys(u'\ue003' + "test")
+                self.f_xp("(//input[@name='name'])[%s]" % i).send_keys(u'\ue003' + self.LEAD_NAME)
             except:
                 pass
 

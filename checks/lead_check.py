@@ -21,30 +21,30 @@ def lead_check(self):
 
     try:
         WebDriverWait(self.driver, 6).until(
-            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'%s') and contains(.,'test')]" % self.lead)))
+            EC.presence_of_element_located((By.XPATH, "//td[contains(.,'%s') and contains(.,'%s')]" % (self.lead, self.LEAD_NAME))))
         self.log("лид дошел")
 
         try:
-            self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'test')]]/td[3]/a[@class='more-info']" % self.lead).click()
+            self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[3]/a[@class='more-info']" % (self.lead, self.LEAD_NAME)).click()
         except:
             pass
         
-        lead_info = self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'test')]]/td[3]" % self.lead).text.split('\n')
+        lead_info = self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[3]" % (self.lead, self.LEAD_NAME)).text.split('\n')
         for s in lead_info:
-            if 'Скрыть' not in s:
+            if ('Скрыть' not in s) or ('Less information' not in s):
                 self.log('  %s' % s)
 
 
         try:
-            self.f_xp(".//tr[td[contains(.,'%s')  and contains(.,'test')]]/td[4]/i[contains(@class,'fa-spinner')]" % self.lead)
-            self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'test')]]/td[10]/a[contains(@class,'trash')]" % self.lead).click()
+            self.f_xp(".//tr[td[contains(.,'%s')  and contains(.,'%s')]]/td[4]/i[contains(@class,'fa-spinner')]" % s(elf.lead, self.LEAD_NAME))
+            self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[10]/a[contains(@class,'trash')]" % (self.lead, self.LEAD_NAME)).click()
             time.sleep(1)
-            self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'test')]]/td[4]/i[contains(@class,'fa-trash-o')]" % self.lead)
+            self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[4]/i[contains(@class,'fa-trash-o')]" % (self.lead, self.LEAD_NAME))
             self.log("лид отправлен в trash")
         except:
             #f_xp(".//tr[td[contains(.,'" + str(lead) + "')]]/td[9]/a[contains(@class,'hold')]")
             try:
-                self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'test')]]/td[4]/i[contains(@class,'fa-trash-o')]" % self.lead)
+                self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[4]/i[contains(@class,'fa-trash-o')]" % (self.lead, self.LEAD_NAME))
                 self.log("лид уже в trash")
             except:
                 self.logBad("не удалось отправить в trash лид c телефоном %s" % self.lead)
