@@ -31,7 +31,7 @@ def lead_check(self):
         
         lead_info = self.f_xp(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[3]" % (self.lead, self.LEAD_NAME)).text.split('\n')
         for s in lead_info:
-            if ('Скрыть' not in s) or ('Less information' not in s):
+            if ('Скрыть' not in s) and ('Less information' not in s):
                 self.log('  %s' % s)
 
 
