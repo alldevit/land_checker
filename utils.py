@@ -114,14 +114,15 @@ class Utils(object):
     def cookie_saver(self):
         print('создаю cookies')
         self.driver.get("https://leadrock.com/administrator")
-        time.sleep(4)
+        time.sleep(5)
 
         try:
             self.f_xp("(//button[contains(.,'Login')])[1]").click()
-            time.sleep(1)
         except:
-            pass
-
+            self.f_xp("(//button[contains(.,'Login')])[3]").click()
+        
+        time.sleep(1)
+        self.driver.save_screenshot('screenie.png')
         self.driver.find_element_by_id("LoginForm_username").send_keys(self.LEADROCK_LOGIN)
         self.driver.find_element_by_id("LoginForm_password").send_keys(self.LEADROCK_PASS)
         self.f_xp("//label[@for='checkbox-signup']").click()
