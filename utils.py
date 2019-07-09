@@ -115,15 +115,16 @@ class Utils(object):
         print('создаю cookies')
         self.driver.get("https://leadrock.com/administrator")
         time.sleep(4)
-#        try:
-#            self.f_xp("//img[@src='theme/img/landing/burger.svg']").click()
-#            time.sleep(1)
-#            self.f_xp("(//button[contains(.,'Login')])[2]").click()
-#        except:
-#            self.f_xp("(//button[contains(.,'Login')])[1]").click()
+
+        try:
+            self.f_xp("(//button[contains(.,'Login')])[1]").click()
+            time.sleep(1)
+        except:
+            pass
+
         self.driver.find_element_by_id("LoginForm_username").send_keys(self.LEADROCK_LOGIN)
         self.driver.find_element_by_id("LoginForm_password").send_keys(self.LEADROCK_PASS)
-        self.f_xp("//input[@id='checkbox-signup']").click()
+        self.f_xp("//label[@for='checkbox-signup']").click()
         self.f_xp("//button[@type='submit'][contains(.,'Log in')]").click()
         time.sleep(2)
         with open(self.COOKIES,"wb") as f:
