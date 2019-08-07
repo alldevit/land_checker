@@ -1,9 +1,23 @@
 # Проверка required для полей
 # Считаем поля, считаем такие же поля с required, сравниваем количество
 def inputs_required(self):
+    if self.is_3_stage_form:
+        self.driver.execute_script('salvatoreGannacci()')
     e = 0
     s = ''
-    field_names = ['name', 'phone', 'other[address]', 'other[city]', 'other[zipcode]', 'other[quantity]']
+    field_names = [
+        'name',
+        'phone',
+        'other[address]',
+        'other[city]',
+        'other[zipcode]',
+        'other[postcode]',
+        'other[pcode]',
+        'other[quantity]',
+        'other[address2]',
+        'other[index]'
+        ]
+        
     for elem in field_names:
         elem_num = len(self.f_xps("//input[@name='%s']" % elem))
         if elem_num > 0:

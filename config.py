@@ -10,5 +10,7 @@ class Config(object):
     LEAD_NAME = 'test'
     LEADROCK_LOGIN = 'почта на лидроке'
     LEADROCK_PASS = 'пароль от лидрока'
+    SERVER_LOGIN = 'логин от сервера leadrocktest'
+    SERVER_PASS = 'пароль от сервера leadrocktest'
     HEADLESS_MODE = True
     SILENT_MODE = False

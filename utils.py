@@ -6,6 +6,9 @@ from google.cloud import translate
 
 from config import Config
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
 
 class Utils(object):
         
@@ -112,25 +115,16 @@ class Utils(object):
             return False
 
     def cookie_saver(self):
-        print('создаю cookies')
-        self.driver.get("https://leadrock.com/administrator")
-        time.sleep(5)
+        print('для создания cookies, пожалуйста, авторизуйтесь')
+        self.driver.get("https://leadrock.com/")
 
-        try:
-            self.f_xp("(//button[contains(.,'Login')])[1]").click()
-        except:
-            self.f_xp("(//button[contains(.,'Login')])[3]").click()
-        
-        time.sleep(1)
-        self.driver.save_screenshot('screenie.png')
-        self.driver.find_element_by_id("LoginForm_username").send_keys(self.LEADROCK_LOGIN)
-        self.driver.find_element_by_id("LoginForm_password").send_keys(self.LEADROCK_PASS)
-        self.f_xp("//label[@for='checkbox-signup']").click()
-        self.f_xp("//button[@type='submit'][contains(.,'Log in')]").click()
-        time.sleep(2)
-        with open(self.COOKIES,"wb") as f:
-            pickle.dump(self.driver.get_cookies(), f)
-        print('cookies созданы \n')
+        while True:
+            time.sleep(2)
+            if 'administrator' in self.driver.current_url:
+                with open(self.COOKIES,"wb") as f:
+                    pickle.dump(self.driver.get_cookies(), f)
+                print('cookies созданы \n')
+                break
 
 
 class Lang(object):
@@ -213,3 +207,20 @@ class Lang(object):
             g_query = translator.translate((s), dest='ru')
             translated = translated + getattr(g_query, 'text')
         return translated
+
+
+class Driver(Config, Utils, Lang):
+    def __init__(self, images=False, headless=True):
+        options = Options()
+        options.add_argument('log-level=2')
+        options.add_argument("--start-maximized")
+        options.add_argument('--incognito')
+        if self.HEADLESS_MODE and headless:
+            options.add_argument('--headless')
+        if not images:
+            prefs = {'profile.managed_default_content_settings.images':2}
+            options.add_experimental_option('prefs', prefs)
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.driver = webdriver.Chrome(self.DRIVER_PATH, options=options)
+        self.driver.delete_all_cookies()
+        self.log_bad_list = []

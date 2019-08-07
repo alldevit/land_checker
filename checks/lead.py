@@ -32,7 +32,12 @@ def lead(self):
     def send():
         for i in range(1, self.submit_num + 1):
             try:
-                self.f_xp("(//*[@type='submit'])[%s]" % i).click()
+                button = self.f_xp("(//*[@type='submit'])[%s]" % i)
+                if self.is_poll:
+                    button.location_once_scrolled_into_view
+                    time.sleep(2)
+                button.click()
+                #self.f_xp("(//*[@type='submit'])[%s]" % i).click()
             except:
                 pass
 
@@ -81,13 +86,28 @@ def lead(self):
             except:
                 pass
     
+    def input_select():
+        for i in range(1, len(self.f_xps("//select")) + 1):
+            try:
+                self.f_xp("//select[%s" % i).click()
+                self.f_xp("//select[%s]/option[last()]" % i).click()
+            except:
+                pass
+    
     wheel(self)
-
+    if self.is_poll:
+        self.driver.execute_script('uusyuka()')
+    if self.is_3_stage_form:
+        self.driver.execute_script('salvatoreGannacci()')
     input_1()
     input_name()
     input_phone_first()
+    input_select()
     send()
-    validator(self)
+    if self.is_3_stage_form:
+        self.driver.execute_script('salvatoreGannacci()')
+    else:
+        validator(self)
     result = check(False)
     if result == True:
         return check(True)
