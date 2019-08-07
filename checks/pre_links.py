@@ -17,3 +17,6 @@ def pre_links(self):
         self.log('%s "%s"' % (i[1], i[0]), force=True)
     if correct_links != self.links_num:
         self.logBad('не удалось определить %s ссылок' % self.links_num - correct_links)
+    
+    if self.links_num != (c[0])[1]:
+        self.logBad('не все ссылки на преленде одинаковы')
