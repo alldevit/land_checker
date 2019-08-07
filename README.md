@@ -13,6 +13,8 @@ pip install selenium langdetect googletrans google-cloud-translate requests
 
 **4**. Указываем реквизиты доступа к LeadRock.com в `config.py`
 
+**5**. При первом запуске необходимо авторизоваться в Лидроке
+
 ## Использование
 В директории со скриптом создаем файл `landings.txt` и указываем в нем список лендингов для проверки в формате:
 ```
