@@ -64,7 +64,8 @@ for land in lands:
                     fbpixel(runner, 'thankyou')
                     lang_confirm(runner)
                     shipping_post(runner)
-                    lead_check(runner)
+                    if lead_check(runner):
+                        postback(runner)
         else:
             lang_main(runner)
             lang_elements(runner)

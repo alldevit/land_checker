@@ -24,6 +24,7 @@ from checks.policy_blank import policy_blank
 from checks.policy_exist import policy_exist
 from checks.policy_lang import policy_lang
 from checks.policy_link import policy_link
+from checks.postback import postback
 from checks.pre_links import pre_links
 from checks.result import result
 from checks.shipping_post import shipping_post

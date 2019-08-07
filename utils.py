@@ -1,5 +1,12 @@
-import os, time, re, pickle
+import os
+import time
+import re
+import pickle
+import html
+import requests
+from lxml import html as lxhtml
 
+from lxml import etree
 from langdetect import detect
 from googletrans import Translator
 from google.cloud import translate
@@ -82,6 +89,28 @@ class Utils(object):
             os.remove(Config.LOG_LATEST)
         except OSError:
             pass
+
+    # Получение исходного текста страницы через requests
+    def get_source(self, link):
+        response = requests.get(link, cookies=self.cookie_dict)
+        page_text = response.text
+        tree = lxhtml.fromstring(page_text)
+        return tree
+
+    # Получение текста из lxml-элемента
+    @staticmethod
+    def get_text(tree, xp):
+        elem = tree.xpath(xp)
+        if len(elem) > 0:
+            text = str(etree.tostring(elem[0]))
+            text = re.sub(r'<br>|<br/>', '\n', text)
+            unescaped_text = html.unescape(text)
+            debyted_text = re.sub(r'^b\'|\'$', '', unescaped_text)
+            regex = re.compile('<.*?>')
+            clean_text = re.sub(regex, '', debyted_text)
+            return clean_text
+        else:
+            return False
 
     # Получение списка лендов для проверки
     @staticmethod
@@ -224,3 +253,10 @@ class Driver(Config, Utils, Lang):
         self.driver = webdriver.Chrome(self.DRIVER_PATH, options=options)
         self.driver.delete_all_cookies()
         self.log_bad_list = []
+
+        with open(self.COOKIES, 'rb') as f:
+            cookies = pickle.load(f)
+            c_dict = {}
+            for cookie in cookies:
+                c_dict[cookie['name']] = cookie['value']
+        self.cookie_dict = c_dict

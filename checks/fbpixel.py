@@ -8,11 +8,20 @@ def fbpixel(self, page):
     else:
         self.logBad('PageView на %s не работает' % page)
     
-    if page == 'thankyou':
-        if "fbq('track', 'Lead'" in self.driver.page_source:
+    if "fbq('track', 'Lead'" in self.driver.page_source:
+        if page == 'thankyou':
             self.log('Lead на %s работает' % page)
         else:
+            self.logBad('на %s добавлено событие Lead' % page)
+    else:
+        if page == 'thankyou':
             self.logBad('Lead на %s не работает' % page)
+
+    # if page == 'thankyou':
+    #     if "fbq('track', 'Lead'" in self.driver.page_source:
+    #         self.log('Lead на %s работает' % page)
+    #     else:
+    #         self.logBad('Lead на %s не работает' % page)
     
     a = self.driver.page_source.split('\n')
     for s in a:

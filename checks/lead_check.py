@@ -1,8 +1,3 @@
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-
-
 import requests
 import pickle
 import time
@@ -10,60 +5,43 @@ from lxml import html as lxhtml
 from lxml import etree
 from urllib.parse import unquote
 import html
-import re
-
-
-def get_text(elem):
-    text = str(etree.tostring(elem))
-    text = re.sub(r'<br>|<br/>', '\n', text)
-    unescaped_text = html.unescape(text)
-    debited_text = re.sub(r'^b\'|\'$', '', unescaped_text)
-    regex = re.compile('<.*?>')
-    clean_text = re.sub(regex, '', debited_text)
-    return clean_text
-
 
 # Проверка наличия лида в лидроке
 # Открываем лидрок, грузим куки, ищем lead
 def lead_check(self):
-    time.sleep(3)
-    with open(self.COOKIES, 'rb') as f:
-        cookies = pickle.load(f)
-        c_dict = {}
-        for cookie in cookies:
-            c_dict[cookie['name']] = cookie['value']
+    time.sleep(5) #ждем появления лида в базе
 
-    response = requests.get('https://leadrock.com/administrator/lead', cookies=c_dict)
-    page_text = response.text
-    tree = lxhtml.fromstring(page_text)
-
-    leads = tree.xpath("//td[contains(.,'%s') and contains(.,'%s')]" % (self.lead, self.LEAD_NAME))
-
-
-    if len(leads) > 0:
+    tree = self.get_source('https://leadrock.com/administrator/lead')
+    lead = self.get_text(tree, "//td[contains(.,'%s') and contains(.,'%s')]" % (self.lead, self.LEAD_NAME))
+    if lead:
         self.log("лид дошел")
     else:
         self.logBad("не удалось найти лид c телефоном %s" % self.lead)
         return False
 
-
-
-    lead_data = tree.xpath("//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[3]" % (self.lead, self.LEAD_NAME))
-    lead_data = get_text(lead_data[0]).split('\n')
+    # Получаем данные лида, оставленные пользователем
+    lead_data = self.get_text(tree, "//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[3]" % (self.lead, self.LEAD_NAME))
+    lead_data = lead_data.split('\n')
+    lead_data = [x for x in lead_data if x]
     for s in lead_data:
         if ('Подробнее' not in s) and ('More information' not in s):
             self.log('  %s' % s)
 
-    lead_track = tree.xpath(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[2]" % (self.lead, self.LEAD_NAME))
-    lead_track = get_text(lead_track[0])
+    # Получаем номер постбэка
+    self.postback_id = self.get_text(tree, "//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[2]" % (self.lead, self.LEAD_NAME))
 
-    lead_data = tree.xpath(".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[6]" % (self.lead, self.LEAD_NAME))
-    lead_data = get_text(lead_data[0])
+    # Получаем номер лида
+    self.lead_id = self.get_text(tree, "//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[1]/span[1]" % (self.lead, self.LEAD_NAME))
+
+    # Получаем сабы
+    lead_data = self.get_text(tree, ".//tr[td[contains(.,'%s') and contains(.,'%s')]]/td[6]" % (self.lead, self.LEAD_NAME))
     lead_subs = lead_data.split('\n')[2]
     if 'subid ' not in lead_subs:
         lead_subs = lead_subs.split(', ')
         for sub in lead_subs:
             self.log('  %s' % sub)
+
+    return True
 
 
 
