@@ -254,9 +254,12 @@ class Driver(Config, Utils, Lang):
         self.driver.delete_all_cookies()
         self.log_bad_list = []
 
-        with open(self.COOKIES, 'rb') as f:
-            cookies = pickle.load(f)
-            c_dict = {}
-            for cookie in cookies:
-                c_dict[cookie['name']] = cookie['value']
-        self.cookie_dict = c_dict
+        try:
+            with open(self.COOKIES, 'rb') as f:
+                cookies = pickle.load(f)
+                c_dict = {}
+                for cookie in cookies:
+                    c_dict[cookie['name']] = cookie['value']
+            self.cookie_dict = c_dict
+        except:
+            pass
