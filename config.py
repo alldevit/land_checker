@@ -1,4 +1,5 @@
 class Config(object):
+    INPUT_FILE = 'landings.txt'
     DEFAULT_TRACK_URL = 'URL-C53EA-0260C'
     FBPIXEL = '123123123123'
     DRIVER_PATH = '../chromedriver/chromedriver.exe' #путь к хромдрайверу

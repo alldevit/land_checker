@@ -6,7 +6,7 @@ from lxml import etree
 import re
 
 def postback(self):
-    if self.track_url == self.DEFAULT_TRACK_URL:
+    if self.track_url != self.DEFAULT_TRACK_URL:
         self.get_source('https://leadrock.com/administrator/lead/hold/id/%s' % self.lead_id)
         time.sleep(3)
         tree = self.get_source('https://leadrock.com/administrator/postback/index/CHPostbackLog[track_id]/%s' % self.postback_id)

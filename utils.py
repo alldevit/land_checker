@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import re
 import pickle
@@ -18,6 +19,38 @@ from selenium.webdriver.chrome.options import Options
 
 
 class Utils(object):
+
+    @staticmethod
+    def turn_off(message=''):
+        if message:
+            print(message)        
+        input('Press ENTER to exit\n')
+        sys.exit(0)
+    
+    @staticmethod
+    def self_check():
+        errors = []
+        if not hasattr(Config, 'INPUT_FILE'):
+            errors.append('в config.py не найден параметр INPUT_FILE')
+        elif not os.path.isfile(Config.INPUT_FILE):
+            errors.append('не найден %s' % Config.INPUT_FILE)
+        if not hasattr(Config, 'SERVER_LOGIN'):
+            errors.append('в config.py не найден параметр SERVER_LOGIN')
+        if not hasattr(Config, 'SERVER_PASS'):
+            errors.append('в config.py не найден параметр SERVER_PASS')
+        if not os.path.isfile(Config.DRIVER_PATH):
+            errors.append('не найден %s' % Config.DRIVER_PATH)
+        if not os.path.isfile(Config.GJSON):
+            errors.append('не найден %s' % Config.GJSON)
+        if 'логин' in Config.SERVER_LOGIN:
+            errors.append('не указан логин для приватного сервера')
+        if 'пароль' in Config.SERVER_PASS:
+            errors.append('не указан пароль для приватного сервера')
+        if errors:
+            for error in errors:
+                print(error)
+            Utils.turn_off()
+        
         
     # Сокращение стандартных методов WebDriver
     def f_xp(self, s):
@@ -115,30 +148,28 @@ class Utils(object):
     # Получение списка лендов для проверки
     @staticmethod
     def get_lands():
-        try:
-            with open('landings.txt', 'r', encoding='utf-8') as f:
-                rows = [row for row in f]
-                lands = []
-                for row in rows:
-                    row = row.replace('\n', '')
+        with open(Config.INPUT_FILE, 'r', encoding='utf-8') as f:
+            rows = [row for row in f]
+            lands = []
+            for row in rows:
+                row = re.sub(r'\n|^\s+|\s+$', '', row)
+                row = re.sub(r'\s+', ' ', row)
+                if 'http' in row:
                     if ' ' in row:
                         tmp_array = row.split(' ')
                     else:
                         tmp_array = [row, Config.DEFAULT_TRACK_URL]
-                        
-                    lands.append(tmp_array)
+                    
+                lands.append(tmp_array)
+            if lands:
                 return lands
-        except OSError:
-            print('landings.txt не найден')
+            else:
+                Utils.turn_off('в %s не обнаружено корректных ссылок' % Config.INPUT_FILE)
 
     @staticmethod
     def cookies_exist():
         if os.path.isfile(Config.COOKIES):
-#            if time.time() - os.path.getmtime(Config.COOKIES) > 7200:
-#                print('cookies устарели')
-#                return False
-#            else:
-                return True
+            return True
         else:
             print('cookies не найдены')
             return False

@@ -5,7 +5,7 @@ from config import Config
 from utils import Utils, Driver
 from checks.all_imports import *
 
-
+Utils.self_check()
 Utils.log_restart()
 lands = Utils.get_lands()
 
