@@ -16,6 +16,7 @@ from config import Config
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import SessionNotCreatedException
 
 
 class Utils(object):
@@ -30,6 +31,12 @@ class Utils(object):
     @staticmethod
     def self_check():
         errors = []
+
+        try:
+            x = Driver()
+        except SessionNotCreatedException:
+            errors.append('вероятно, версия chromedriver устарела')
+
         if not hasattr(Config, 'INPUT_FILE'):
             errors.append('в config.py не найден параметр INPUT_FILE')
         elif not os.path.isfile(Config.INPUT_FILE):
