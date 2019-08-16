@@ -41,18 +41,21 @@ class Utils(object):
             errors.append('в config.py не найден параметр INPUT_FILE')
         elif not os.path.isfile(Config.INPUT_FILE):
             errors.append('не найден %s' % Config.INPUT_FILE)
+
         if not hasattr(Config, 'SERVER_LOGIN'):
             errors.append('в config.py не найден параметр SERVER_LOGIN')
+        elif 'логин' in Config.SERVER_LOGIN:
+            errors.append('не указан логин для приватного сервера')
+
         if not hasattr(Config, 'SERVER_PASS'):
             errors.append('в config.py не найден параметр SERVER_PASS')
+        elif 'пароль' in Config.SERVER_PASS:
+            errors.append('не указан пароль для приватного сервера')
+            
         if not os.path.isfile(Config.DRIVER_PATH):
             errors.append('не найден %s' % Config.DRIVER_PATH)
         if not os.path.isfile(Config.GJSON):
             errors.append('не найден %s' % Config.GJSON)
-        if 'логин' in Config.SERVER_LOGIN:
-            errors.append('не указан логин для приватного сервера')
-        if 'пароль' in Config.SERVER_PASS:
-            errors.append('не указан пароль для приватного сервера')
         if errors:
             for error in errors:
                 print(error)
