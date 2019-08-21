@@ -13,7 +13,7 @@ def postback(self):
         postback = self.get_text(tree, "//tr[contains(@class, 'odd')]/td[7]")
         self.get_source('https://leadrock.com/administrator/lead/trash/id/%s' % self.lead_id)
         if postback:
-            if ('{' or '}') in postback:
+            if re.search('({|}|%7B|%7D){1,}', postback):
                 self.logBad('в постбэке %s есть фигурные скобки' % self.postback_id)
                 print(postback)
             else:
