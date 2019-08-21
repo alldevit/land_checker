@@ -24,7 +24,7 @@ class Utils(object):
     @staticmethod
     def turn_off(message=''):
         if message:
-            print(message)        
+            print(message)
         input('Press ENTER to exit\n')
         sys.exit(0)
     
@@ -34,21 +34,22 @@ class Utils(object):
 
         try:
             x = Driver()
+            x.stop()
         except SessionNotCreatedException:
             errors.append('вероятно, версия chromedriver устарела')
 
         if not hasattr(Config, 'INPUT_FILE'):
-            errors.append('в config.py не найден параметр INPUT_FILE')
+            errors.append('в config.py не найден параметр INPUT_FILE = \'landings.txt\'')
         elif not os.path.isfile(Config.INPUT_FILE):
             errors.append('не найден %s' % Config.INPUT_FILE)
 
         if not hasattr(Config, 'SERVER_LOGIN'):
-            errors.append('в config.py не найден параметр SERVER_LOGIN')
+            errors.append('в config.py не найден параметр SERVER_LOGIN = \'логин от приватного сервера\'')
         elif 'логин' in Config.SERVER_LOGIN:
             errors.append('не указан логин для приватного сервера')
 
         if not hasattr(Config, 'SERVER_PASS'):
-            errors.append('в config.py не найден параметр SERVER_PASS')
+            errors.append('в config.py не найден параметр SERVER_PASS = \'пароль от приватного сервера\'')
         elif 'пароль' in Config.SERVER_PASS:
             errors.append('не указан пароль для приватного сервера')
             
