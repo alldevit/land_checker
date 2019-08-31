@@ -7,7 +7,7 @@ python -m pip install --upgrade pip
 ```
 **2**. Устанавливаем необходимые модули
 ```bash
-pip install selenium langdetect googletrans google-cloud-translate requests
+pip install lxml selenium langdetect googletrans google-cloud-translate requests
 ```
 **3**. Скачиваем [chromedriver](http://chromedriver.chromium.org/downloads "Chromedriver"), указываем путь до него в файле `config.py`
 
